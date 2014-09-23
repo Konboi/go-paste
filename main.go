@@ -12,8 +12,12 @@ import (
 )
 
 type Ping struct {
-	Status int    `json:"status"`
-	Result string `json:"result"`
+	Status  int         `json:"status"`
+	Results ping_result `json:"results"`
+}
+
+type ping_result struct {
+	Message string `json:"message"`
 }
 
 func formHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +55,8 @@ func npHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
-	ping := Ping{http.StatusOK, "ok"}
+	ping_result := ping_result{"ok"}
+	ping := Ping{http.StatusOK, ping_result}
 
 	res, err := json.Marshal(ping)
 
