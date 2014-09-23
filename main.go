@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,10 +11,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Ping struct {
+	Status int    `json:"status"`
+	Result string `json:"result"`
+}
+
 func formHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("view/form.html")
 	if err != nil {
-		log.Printf("Error: %s", err)
 		fmt.Errorf("Error: %s", err)
 	}
 	t.Execute(w, nil)
@@ -45,8 +50,23 @@ func npHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, nil)
 }
 
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	ping := Ping{http.StatusOK, "ok"}
+
+	res, err := json.Marshal(ping)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+}
+
 func main() {
 	http.HandleFunc("/", formHandler)
+	http.HandleFunc("/ping", pingHandler)
 	http.HandleFunc("/post", postHandler)
 	http.HandleFunc("/np", npHandler)
 	http.ListenAndServe(":8000", nil)
