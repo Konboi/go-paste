@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	//	"fmt"
 )
 
 type PingResult struct {
@@ -43,4 +45,20 @@ func TestPingHandler(t *testing.T) {
 	if pingResult.Results.Message != "ok" {
 		t.Errorf("Ping Results Message is not 'ok'. Result is %s", pingResult.Results.Message)
 	}
+}
+
+func TestPostHandler(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(postHandler))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+
+	if err != nil && !strings.Contains(err.Error(), "Get /: stopped after 10 redirects") {
+		t.Errorf("Someting Server Error: %s", err)
+	}
+
+	if res.StatusCode != 302 {
+		t.Error("Do Not Redirect for Get Method")
+	}
+
 }
