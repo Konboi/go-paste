@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"database/sql"
@@ -20,6 +21,12 @@ type Ping struct {
 
 type ping_result struct {
 	Message string `json:"message"`
+}
+
+type Np struct {
+	Code  string
+	Title string
+	Body  string
 }
 
 func randString(n int) string {
@@ -72,8 +79,33 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func npHandler(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Path[len("/np/"):]
+	log.Printf(code)
+
+	if code == "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	db, err := sql.Open("mysql", "root@/test")
+	if err != nil {
+		fmt.Errorf("Error: %s", err)
+	}
+
+	npSelct, err := db.Prepare("SELECT title, body FROM np WHERE code = ?")
+	if err != nil {
+		fmt.Errorf("Select Preare: %s", err)
+	}
+	defer npSelct.Close()
+
+	var np Np
+	err = npSelct.QueryRow(code).Scan(&np.Title, &np.Body)
+	if err != nil {
+		fmt.Errorf("Select Error: %s", err)
+	}
+
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write(res)
+	fmt.Fprintf(w, np.Body)
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +126,6 @@ func main() {
 	http.HandleFunc("/", formHandler)
 	http.HandleFunc("/ping", pingHandler)
 	http.HandleFunc("/post", postHandler)
-	http.HandleFunc("/np", npHandler)
+	http.HandleFunc("/np/", npHandler)
 	http.ListenAndServe(":8000", nil)
 }
