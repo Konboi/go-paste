@@ -39,25 +39,35 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
 
-	db, err := sql.Open("mysql", "root@/nopaste")
+	code := randString(8)
+
+	db, err := sql.Open("mysql", "root@/test")
 	if err != nil {
 		fmt.Errorf("Error: %s", err)
 	}
-	rows, _ := db.Query("SHOW TABLES")
-	log.Printf("%T", rows.Columns)
-	log.Printf("title: %s \n body:%s", title, body)
+
+	npIns, err := db.Prepare("INSERT INTO np (code, title, body) VALUES(?, ?, ?)")
+	if err != nil {
+		fmt.Errorf("Insert Prepare Error: %s", err)
+	}
+	defer npIns.Close()
+
+	_, err = npIns.Exec(code, title, body)
+
+	if err != nil {
+		fmt.Errorf("Insert Error: %s", err)
+	}
+
+	http.Redirect(w, r, "/np/"+code, http.StatusFound)
 }
 
 func npHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("view/np.html")
-	if err != nil {
-		fmt.Errorf("Error: %s", err)
-	}
-	t.Execute(w, nil)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write(res)
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
-	ping := Ping{http.StatusOK, result{"ok"}}
+	ping := Ping{http.StatusOK, ping_result{"ok"}}
 
 	res, err := json.Marshal(ping)
 
