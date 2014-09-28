@@ -1,10 +1,10 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
 	"database/sql"
@@ -18,8 +18,18 @@ type Ping struct {
 	} `json:"results"`
 }
 
-type result struct {
+type ping_result struct {
 	Message string `json:"message"`
+}
+
+func randString(n int) string {
+	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	var bytes = make([]byte, n)
+	rand.Read(bytes)
+	for i, b := range bytes {
+		bytes[i] = alphanum[b%byte(len(alphanum))]
+	}
+	return string(bytes)
 }
 
 func formHandler(w http.ResponseWriter, r *http.Request) {
