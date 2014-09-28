@@ -7,12 +7,15 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	//	"fmt"
+
+	//"fmt"
 )
 
 type PingResult struct {
-	Status  int         `json:"status"`
-	Results ping_result `json:"results"`
+	Status  int `json:"status"`
+	Results struct {
+		Message string `json:"message"`
+	} `json:"results"`
 }
 
 func TestPingHandler(t *testing.T) {
